@@ -27,7 +27,7 @@ class Server:
             logging.info(f"Nova conexão de {addr}")
             self.handle_client(client)
 
-    def handl_client(self, client):
+    def handle_client(self, client):
         
         try:
             data = client.recv(1024).decode().strip()
@@ -39,7 +39,7 @@ class Server:
 
         except Exception as e:
             logging.error(f"Erro ao processar requisição: {e}")
-            client.send("ERRO|Falha interna do servidor".encode())
+            client.send("404 NOT FOUND\nFalha interna do servidor".encode())
 
         finally:
             client.close()

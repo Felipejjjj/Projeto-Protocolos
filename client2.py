@@ -41,17 +41,17 @@ class ListaEncadeada:
             atual = atual.next
         return None
 
-def enviar_requisicao(mensagem):
-    HOST = '0.0.0.0'
+def enviar_requisicao(host, mensagem):
     PORT = 12345
     
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as cliente:
-        cliente.connect((HOST, PORT))
+        cliente.connect((host, PORT))
         cliente.send(mensagem.encode())
         resposta = cliente.recv(1024).decode()
         return resposta
 
 def main():
+    host = input("Digite o IP do servidor: ")
     lista_produtos = ListaEncadeada()
     
     while True:
@@ -65,24 +65,24 @@ def main():
             codigo = input("Código: ")
             nome = input("Nome: ")
             preco = input("Preço: ")
-            resposta = enviar_requisicao(f"CADASTRAR|{codigo}|{nome}|{preco}")
+            resposta = enviar_requisicao(host, f"CADASTRAR|{codigo}|{nome}|{preco}")
             print(resposta)
-            if resposta.startswith("200 OK"):
+            if resposta.startswith("OK"):
                 lista_produtos.adicionar(int(codigo), nome, float(preco))
         
         elif opcao == '2':
             codigo = input("Código: ")
-            resposta = enviar_requisicao(f"CONSULTAR|{codigo}")
+            resposta = enviar_requisicao(host, f"CONSULTAR|{codigo}")
             print(resposta)
-            if resposta.startswith("200 OK"):
+            if resposta.startswith("OK"):
                 partes = resposta.split('|')
                 print(f"Produto: {partes[1]}, Preço: R$ {partes[2]}")
         
         elif opcao == '3':
             codigo = input("Código: ")
-            resposta = enviar_requisicao(f"REMOVER|{codigo}")
+            resposta = enviar_requisicao(host, f"REMOVER|{codigo}")
             print(resposta)
-            if resposta.startswith("200 OK"):
+            if resposta.startswith("OK"):
                 lista_produtos.remover(int(codigo))
         
         elif opcao == '4':
