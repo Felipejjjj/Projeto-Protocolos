@@ -35,11 +35,17 @@ class Server:
                 return
             
             response = self.process_request(data)
-            client.send(response.encode())
+            try:
+                client.send(response.encode())
+            except BrokenPipeError:
+                logging.error("Erro: Cliente fechou a conexão antes da resposta.")
 
         except Exception as e:
             logging.error(f"Erro ao processar requisição: {e}")
+        try:
             client.send("404 NOT FOUND\nFalha interna do servidor".encode())
+        except BrokenPipeError:
+            logging.error("Erro: Cliente desconectado antes da resposta.")
 
         finally:
             client.close()

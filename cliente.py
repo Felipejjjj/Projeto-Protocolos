@@ -54,10 +54,16 @@ def enviar_requisicao(host, mensagem):
     PORT = 12345
     
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as cliente:
-        cliente.connect((host, PORT))
-        cliente.send(mensagem.encode())
-        resposta = cliente.recv(1024).decode()
-        return resposta
+        try:
+            cliente.connect((host, PORT))
+            cliente.send(mensagem.encode())
+            
+            # Garante que a resposta seja recebida antes de fechar a conexão
+            resposta = cliente.recv(1024).decode()
+            return resposta
+        except socket.error as e:
+            print(f"Erro de conexão: {e}")
+            return "ERRO|Falha na conexão com o servidor"
 
 def main():
     host = "0.0.0.0" if testar_conexao("0.0.0.0") else input("Digite o IP do servidor: ")
@@ -75,6 +81,8 @@ def main():
             nome = input("Nome: ")
             preco = input("Preço: ")
             resposta = enviar_requisicao(host, f"CADASTRAR|{codigo}|{nome}|{preco}")
+            print("Aguardando resposta do servidor...")
+            print(resposta)
             print(resposta)
             if resposta.startswith("OK"):
                 lista_produtos.adicionar(int(codigo), nome, float(preco))
