@@ -10,11 +10,8 @@ class BST:
         self.root = None
 
     def insert(self, codigo, nome, preco):
-        """Insere um novo produto na árvore, evitando duplicação de código"""
-        if self.search(codigo):
-            return False  # Produto com o mesmo código já existe
+        """Insere um novo produto na árvore"""
         self.root = self._insert(self.root, codigo, nome, preco)
-        return True  # Produto cadastrado com sucesso
 
     def _insert(self, node, codigo, nome, preco):
         if not node:
@@ -43,7 +40,6 @@ class BST:
     def _remove(self, node, codigo):
         if not node:
             return node, False
-
         if codigo < node.codigo:
             node.left, deleted = self._remove(node.left, codigo)
         elif codigo > node.codigo:
@@ -54,8 +50,6 @@ class BST:
                 return node.right, deleted
             if not node.right:
                 return node.left, deleted
-            
-            # Substituir pelo menor valor da subárvore direita
             temp = self._min_value_node(node.right)
             node.codigo, node.produto = temp.codigo, temp.produto
             node.right, _ = self._remove(node.right, temp.codigo)
@@ -64,18 +58,8 @@ class BST:
 
     def _min_value_node(self, node):
         """Encontra o menor nó na subárvore direita"""
-        while node.left:
-            node = node.left
-        return node
+        current = node
+        while current.left:
+            current = current.left
+        return current
 
-    def inorder(self):
-        """Retorna a lista de produtos ordenados por código"""
-        produtos = []
-        self._inorder(self.root, produtos)
-        return produtos
-
-    def _inorder(self, node, produtos):
-        if node:
-            self._inorder(node.left, produtos)
-            produtos.append({"codigo": node.codigo, "nome": node.produto["nome"], "preco": node.produto["preco"]})
-            self._inorder(node.right, produtos)

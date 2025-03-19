@@ -1,4 +1,3 @@
-import sys
 import socket
 
 class Node:
@@ -48,35 +47,20 @@ def testar_conexao(host, port=12345):
             cliente.settimeout(1)
             cliente.connect((host, port))
         return True
-    except (socket.error, socket.timeout) as e:
-        print(f"Erro ao conectar: {e}")
+    except (socket.error, socket.timeout):
         return False
 
 def enviar_requisicao(host, mensagem):
     PORT = 12345
-    try:
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as cliente:
-            cliente.settimeout(5)  # Adiciona timeout maior para evitar desconexões rápidas
-            cliente.connect((host, PORT))
-            cliente.sendall(mensagem.encode())  # Usa sendall() para garantir envio total
-            resposta = cliente.recv(1024).decode()
-            return resposta
-    except (socket.error, socket.timeout) as e:
-        return f"Erro ao enviar requisição: {e}"
+    
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as cliente:
+        cliente.connect((host, PORT))
+        cliente.send(mensagem.encode())
+        resposta = cliente.recv(1024).decode()
+        return resposta
 
 def main():
-    if len(sys.argv) > 1:
-        host = sys.argv[1]
-        if not testar_conexao(host):
-            print(f"Não foi possível conectar ao IP fornecido: {host}")
-            return
-        print(f"Conectado com sucesso ao IP: {host}")
-    else:
-        host = input("Digite o IP do servidor: ")
-        if not testar_conexao(host):
-            print(f"Erro ao conectar ao IP: {host}")
-            return
-
+    host = "0.0.0.0" if testar_conexao("0.0.0.0") else input("Digite o IP do servidor: ")
     lista_produtos = ListaEncadeada()
     
     while True:

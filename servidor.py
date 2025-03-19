@@ -18,7 +18,6 @@ class Server:
 
     def start(self):
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  # Permite reusar a porta após reiniciar
         server.bind((self.host, self.port))
         server.listen(5)
         logging.info(f"Servidor iniciado na porta {self.port}...")
@@ -29,28 +28,24 @@ class Server:
             self.handle_client(client)
 
     def handle_client(self, client):
+        
         try:
-            while True:  # Permite múltiplas requisições na mesma conexão
-                data = client.recv(1024).decode().strip()
-                
-                if not data:  # Se `recv()` retornar vazio, o cliente fechou a conexão
-                    logging.info("Cliente desconectado.")
-                    break
-                
-                response = self.process_request(data)
-                client.sendall(response.encode())  # Usa sendall() para evitar envio parcial
+            data = client.recv(1024).decode().strip()
+            if not data:
+                return
+            
+            response = self.process_request(data)
+            client.send(response.encode())
 
         except Exception as e:
             logging.error(f"Erro ao processar requisição: {e}")
-            try:
-                client.sendall("404 NOT FOUND\nFalha interna do servidor".encode())
-            except BrokenPipeError:
-                logging.warning("Tentativa de resposta falhou. Cliente pode ter desconectado.")
+            client.send("404 NOT FOUND\nFalha interna do servidor".encode())
 
         finally:
             client.close()
 
     def process_request(self, request):
+
         partes = request.split("|")
         acao = partes[0]
 
@@ -91,7 +86,7 @@ class Server:
             return "ERRO|Código inválido"
 
     def remover(self, partes):
-        """Remove um produto pelo código"""
+        "Remove um produto pelo código"
         if len(partes) < 2:
             return "ERRO|Código não fornecido"
 
@@ -108,3 +103,8 @@ class Server:
 if __name__ == "__main__":
     server = Server()
     server.start()
+
+
+
+
+
