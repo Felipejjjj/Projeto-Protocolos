@@ -1,3 +1,4 @@
+import sys
 import socket
 
 class Node:
@@ -41,6 +42,15 @@ class ListaEncadeada:
             atual = atual.next
         return None
 
+def testar_conexao(host, port=12345):
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as cliente:
+            cliente.settimeout(1)
+            cliente.connect((host, port))
+        return True
+    except (socket.error, socket.timeout):
+        return False
+
 def enviar_requisicao(host, mensagem):
     PORT = 12345
     
@@ -51,7 +61,16 @@ def enviar_requisicao(host, mensagem):
         return resposta
 
 def main():
-    host = input("Digite o IP do servidor: ")
+    # Verificando se foi passado um IP como argumento na linha de comando
+    if len(sys.argv) > 1:
+        host = sys.argv[1]
+        if not testar_conexao(host):
+            print(f"Não foi possível conectar ao IP fornecido: {host}")
+            return
+        print(f"Conectado com sucesso ao IP: {host}")
+    else:
+        host = "0.0.0.0" if testar_conexao("0.0.0.0") else input("Digite o IP do servidor: ")
+
     lista_produtos = ListaEncadeada()
     
     while True:
@@ -91,5 +110,6 @@ def main():
         else:
             print("Opção inválida!")
 
+# Verifique se o script está sendo executado diretamente
 if __name__ == "__main__":
     main()

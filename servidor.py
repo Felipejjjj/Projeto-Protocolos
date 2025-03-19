@@ -67,7 +67,7 @@ class Server:
             codigo, nome, preco = int(partes[1]), partes[2], float(partes[3])
             self.produtos.insert(codigo, nome, preco)
             logging.info(f"Produto cadastrado: {codigo} - {nome} (R$ {preco})")
-            return f"OK|Produto {nome} cadastrado com sucesso!"
+            return f"200 OK\n------\nProduto {nome} cadastrado com sucesso!"
         except ValueError:
             return "ERRO|Formato inválido dos dados"
 
@@ -81,7 +81,7 @@ class Server:
             produto = self.produtos.search(codigo)
             if produto:
                 return f"OK|{produto['nome']}|{produto['preco']}"
-            return "ERRO|Produto não encontrado"
+            return "404 NOT FOUND\n-------------\nProduto não encontrado"
         except ValueError:
             return "ERRO|Código inválido"
 
@@ -95,7 +95,7 @@ class Server:
             sucesso = self.produtos.remove(codigo)
             if sucesso:
                 logging.info(f"Produto {codigo} removido")
-                return "OK|Produto removido com sucesso"
+                return "200 OK\n------\nProduto removido com sucesso"
             return "ERRO|Produto não encontrado"
         except ValueError:
             return "ERRO|Código inválido"
