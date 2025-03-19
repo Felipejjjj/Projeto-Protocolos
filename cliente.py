@@ -48,20 +48,23 @@ def testar_conexao(host, port=12345):
             cliente.settimeout(1)
             cliente.connect((host, port))
         return True
-    except (socket.error, socket.timeout):
+    except (socket.error, socket.timeout) as e:
+        print(f"Erro ao conectar: {e}")
         return False
 
 def enviar_requisicao(host, mensagem):
     PORT = 12345
-    
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as cliente:
-        cliente.connect((host, PORT))
-        cliente.send(mensagem.encode())
-        resposta = cliente.recv(1024).decode()
-        return resposta
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as cliente:
+            cliente.settimeout(5)  # Adiciona timeout maior para evitar desconexões rápidas
+            cliente.connect((host, PORT))
+            cliente.sendall(mensagem.encode())  # Usa sendall() para garantir envio total
+            resposta = cliente.recv(1024).decode()
+            return resposta
+    except (socket.error, socket.timeout) as e:
+        return f"Erro ao enviar requisição: {e}"
 
 def main():
-    # Verificando se foi passado um IP como argumento na linha de comando
     if len(sys.argv) > 1:
         host = sys.argv[1]
         if not testar_conexao(host):
@@ -69,7 +72,10 @@ def main():
             return
         print(f"Conectado com sucesso ao IP: {host}")
     else:
-        host = "0.0.0.0" if testar_conexao("0.0.0.0") else input("Digite o IP do servidor: ")
+        host = input("Digite o IP do servidor: ")
+        if not testar_conexao(host):
+            print(f"Erro ao conectar ao IP: {host}")
+            return
 
     lista_produtos = ListaEncadeada()
     
@@ -110,6 +116,5 @@ def main():
         else:
             print("Opção inválida!")
 
-# Verifique se o script está sendo executado diretamente
 if __name__ == "__main__":
     main()
