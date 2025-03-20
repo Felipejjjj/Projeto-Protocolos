@@ -1,5 +1,6 @@
 import socket
 import logging
+import threading  # Importa o módulo threading
 from bst import BST  # Importa a árvore binária de busca (BST) para armazenar os produtos
 
 # Classe que representa o servidor
@@ -28,7 +29,9 @@ class Server:
         while True:
             client, addr = server.accept()  # Aceita uma nova conexão
             logging.info(f"Nova conexão de {addr}")  # Log da conexão recebida
-            self.handle_client(client)  # Processa a requisição do cliente
+            # Cria uma nova thread para processar a requisição do cliente
+            client_thread = threading.Thread(target=self.handle_client, args=(client,))
+            client_thread.start()  # Inicia a thread
 
     # Processa a requisição recebida do cliente
     def handle_client(self, client):
