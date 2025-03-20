@@ -28,11 +28,12 @@ class Server:
             self.handle_client(client)
 
     def handle_client(self, client):
-        
         try:
-            data = client.recv(1024).decode().strip()
+            data = client.recv(1024)
             if not data:
+                logging.warning("Cliente desconectado antes de enviar dados.")
                 return
+            data = data.decode().strip()
             
             response = self.process_request(data)
             try:
@@ -42,16 +43,10 @@ class Server:
 
         except Exception as e:
             logging.error(f"Erro ao processar requisição: {e}")
-        try:
-            client.send("404 NOT FOUND\nFalha interna do servidor".encode())
-        except BrokenPipeError:
-            logging.error("Erro: Cliente desconectado antes da resposta.")
-
         finally:
             client.close()
 
     def process_request(self, request):
-
         partes = request.split("|")
         acao = partes[0]
 
@@ -65,7 +60,6 @@ class Server:
             return "ERRO|Ação desconhecida"
 
     def cadastrar(self, partes):
-        """Realiza o cadastro de um produto"""
         if len(partes) < 4:
             return "ERRO|Dados incompletos"
 
@@ -78,7 +72,6 @@ class Server:
             return "ERRO|Formato inválido dos dados"
 
     def consultar(self, partes):
-        """Consulta um produto pelo código"""
         if len(partes) < 2:
             return "ERRO|Código não fornecido"
 
@@ -92,7 +85,6 @@ class Server:
             return "ERRO|Código inválido"
 
     def remover(self, partes):
-        "Remove um produto pelo código"
         if len(partes) < 2:
             return "ERRO|Código não fornecido"
 
@@ -109,8 +101,3 @@ class Server:
 if __name__ == "__main__":
     server = Server()
     server.start()
-
-
-
-
-
