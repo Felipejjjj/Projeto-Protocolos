@@ -35,13 +35,18 @@ class Server:
         try:
             data = client.recv(1024)  # Recebe até 1024 bytes de dados do cliente
             data = data.decode().strip()  # Decodifica e remove espaços extras
-
+            
+            if not data:
+                logging.warning("Recebida uma requisição vazia.")
+                client.send("ERRO|Requisição vazia".encode())
+                return
+            
             response = self.process_request(data)  # Processa a requisição recebida
-
             client.send(response.encode())  # Envia a resposta de volta para o cliente
 
         except Exception as e:
             logging.error(f"Erro ao processar requisição: {e}")  # Log de erro
+            client.send("ERRO|Falha interna do servidor".encode())
         finally:
             client.close()  # Fecha a conexão com o cliente
 
@@ -67,6 +72,9 @@ class Server:
 
         try:
             codigo, nome, preco = int(partes[1]), partes[2], float(partes[3])  # Converte os valores recebidos
+            if not nome.replace(" ", "").isalpha():
+                return "ERRO|Nome inválido. Use apenas letras e espaços"
+            
             self.produtos.insert(codigo, nome, preco)  # Insere o produto na árvore BST
             logging.info(f"Produto cadastrado: {codigo} - {nome} (R$ {preco})")  # Log do cadastro
             return f"200 OK\n------\nProduto {nome} cadastrado com sucesso!"  # Responde ao cliente com sucesso
@@ -82,7 +90,7 @@ class Server:
             codigo = int(partes[1])  # Converte o código para inteiro
             produto = self.produtos.search(codigo)  # Procura o produto na árvore BST
             if produto:
-                return f"200 OK\n------\n{produto['nome']}|{produto['preco']}"  # Retorna os dados do produto
+                return f"200 OK\n------\ncodigo: {codigo} | nome: {produto['nome']} | valor: R${produto['preco']}"  # Retorna os dados do produto
             return "404 NOT FOUND\n-------------\nProduto não encontrado"  # Retorna erro se não encontrar
         except ValueError:
             return "ERRO|Código inválido"  # Retorna erro se o código não for um número
