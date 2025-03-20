@@ -73,5 +73,5 @@ logging: Usada para registrar eventos e atividades do servidor.
 sys: Usada para acessar argumentos passados na linha de comando.
 
 ### Responsáveis pelo projeto
-| [<img loading="lazy" src="https://avatars.githubusercontent.com/u/107876857?v=4" width=115><br><sub>matricula </sub><sub>Felipe Oliveira</sub><sub>Felipe Oliveira</sub>](https://github.com/Felipejjjj) | [<img loading="lazy" src="https://avatars.githubusercontent.com/u/149403389?v=4" width=115><br><sub>Francisco Viana</sub><sub>matricula 20232370011</sub><sub>francisco.viana@academico.ifpb.edu.br</sub>](https://github.com/franciscovmn) |
+| [<img loading="lazy" src="https://avatars.githubusercontent.com/u/107876857?v=4" width=115><br><sub>Felipe Oliveira</sub><br><sub>matricula 20241370007</sub><br><sub>raimundo.felipe@academico.ifpb.edu.br</sub>](https://github.com/Felipejjjj) | [<img loading="lazy" src="https://avatars.githubusercontent.com/u/149403389?v=4" width=115><br><sub>Francisco Viana</sub><br><sub>matricula 20232370011</sub><br><sub>francisco.viana@academico.ifpb.edu.br</sub>](https://github.com/franciscovmn) |
 | :---: | :---: | 
