@@ -4,7 +4,7 @@ from bst import BST  # Importa a árvore binária de busca (BST) para armazenar 
 
 # Classe que representa o servidor
 class Server:
-    def __init__(self, host="0.0.0.0", port=12345):
+    def __init__(self, host="0.0.0.0", port=5000):
         self.host = host  # IP no qual o servidor vai rodar (0.0.0.0 aceita conexões de qualquer IP)
         self.port = port  # Porta onde o servidor escuta as conexões
         self.produtos = BST()  # Estrutura para armazenar os produtos na forma de uma árvore binária

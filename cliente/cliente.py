@@ -55,7 +55,7 @@ class ListaEncadeada:
         return None  # Produto não encontrado
 
 # Testa se o cliente consegue conectar ao servidor
-def testar_conexao(host, port=12345):
+def testar_conexao(host, port=5000):
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as cliente:
             cliente.settimeout(1)  # Define um tempo limite para a conexão
@@ -67,7 +67,7 @@ def testar_conexao(host, port=12345):
 
 # Envia uma requisição para o servidor e recebe a resposta
 def enviar_requisicao(host, mensagem):
-    PORT = 12345  # Porta do servidor
+    PORT = 5000  # Porta do servidor
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as cliente:
             cliente.connect((host, PORT))  # Conecta ao servidor
