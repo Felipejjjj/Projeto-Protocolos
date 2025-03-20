@@ -82,7 +82,7 @@ class Server:
             codigo = int(partes[1])  # Converte o código para inteiro
             produto = self.produtos.search(codigo)  # Procura o produto na árvore BST
             if produto:
-                return f"OK|{produto['nome']}|{produto['preco']}"  # Retorna os dados do produto
+                return f"200 OK\n------\n{produto['nome']}|{produto['preco']}"  # Retorna os dados do produto
             return "404 NOT FOUND\n-------------\nProduto não encontrado"  # Retorna erro se não encontrar
         except ValueError:
             return "ERRO|Código inválido"  # Retorna erro se o código não for um número
@@ -98,7 +98,7 @@ class Server:
             if sucesso:
                 logging.info(f"Produto {codigo} removido")  # Log da remoção
                 return "200 OK\n------\nProduto removido com sucesso"  # Retorna sucesso
-            return "ERRO|Produto não encontrado"  # Retorna erro se o produto não existir
+            return "404 NOT FOUND\n-------------\nProduto não encontrado"  # Retorna erro se o produto não existir
         except ValueError:
             return "ERRO|Código inválido"  # Retorna erro se o código não for um número
 
