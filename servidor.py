@@ -33,10 +33,8 @@ class Server:
             data = data.decode().strip()
             
             response = self.process_request(data)
-            try:
-                client.send(response.encode())
-            except BrokenPipeError:
-                logging.error("Erro: Cliente fechou a conexão antes da resposta.")
+
+            client.send(response.encode())
 
         except Exception as e:
             logging.error(f"Erro ao processar requisição: {e}")
