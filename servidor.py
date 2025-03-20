@@ -30,9 +30,6 @@ class Server:
     def handle_client(self, client):
         try:
             data = client.recv(1024)
-            if not data:
-                logging.warning("Cliente desconectado antes de enviar dados.")
-                return
             data = data.decode().strip()
             
             response = self.process_request(data)
