@@ -1,6 +1,6 @@
 import socket
 import logging
-from arvore_bst.bst import BST  # Importa a árvore binária de busca (BST) para armazenar os produtos
+from bst import BST  # Importa a árvore binária de busca (BST) para armazenar os produtos
 
 # Classe que representa o servidor
 class Server:
