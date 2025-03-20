@@ -2,6 +2,7 @@ import sys
 import socket
 import logging
 import re
+import threading
 
 # Configuração dos logs para registrar erros e eventos importantes
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -66,34 +67,19 @@ def testar_conexao(host, port=5000):
         return False  # Deu erro na conexão
 
 # Envia uma requisição para o servidor e recebe a resposta
-def enviar_requisicao(host, mensagem):
+def enviar_requisicao(cliente, mensagem):
     PORT = 5000  # Porta do servidor
     try:
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as cliente:
-            cliente.connect((host, PORT))  # Conecta ao servidor
-            cliente.send(mensagem.encode())  # Envia a mensagem codificada
-            resposta = cliente.recv(1024).decode()  # Recebe a resposta do servidor
-            return resposta  # Retorna a resposta
+        cliente.connect((host, PORT))  # Conecta ao servidor
+        cliente.send(mensagem.encode())  # Envia a mensagem codificada
+        resposta = cliente.recv(1024).decode()  # Recebe a resposta do servidor
+        return resposta  # Retorna a resposta
     except socket.error as e:
         logging.error(f"Erro ao enviar requisição: {e}")
         return "ERRO|Falha na comunicação com o servidor"  # Retorna erro
 
-# Função principal do cliente
-
-def main():
-    # Verifica se foi passado um IP como argumento na linha de comando
-    if len(sys.argv) > 1:
-        host = sys.argv[1]
-        if not testar_conexao(host):
-            print(f"Não foi possível conectar ao IP fornecido: {host}")
-            return
-        print(f"Conectado com sucesso ao IP: {host}")
-    else:
-        # Se não passou um IP, tenta conectar no padrão ou pede ao usuário
-        host = "0.0.0.0" if testar_conexao("0.0.0.0") else input("Digite o IP do servidor: ")
-
-    lista_produtos = ListaEncadeada()  # Cria uma lista para guardar os produtos localmente
-    
+# Função para enviar requisição ao servidor
+def send_request(cliente, lista_produtos):
     while True:
         # Menu de opções para o usuário
         print("\n1. Cadastrar Produto")
@@ -110,7 +96,7 @@ def main():
                     print("Erro: O nome deve conter apenas letras e espaços!")
                     continue
                 preco = float(input("Preço: "))
-                resposta = enviar_requisicao(host, f"CADASTRAR|{codigo}|{nome}|{preco}")
+                resposta = enviar_requisicao(cliente, f"CADASTRAR|{codigo}|{nome}|{preco}")
                 print(resposta)
                 if resposta.startswith("OK"):
                     lista_produtos.adicionar(codigo, nome, preco)
@@ -120,7 +106,7 @@ def main():
         elif opcao == '2':  # Consultar produto
             try:
                 codigo = int(input("Código: "))
-                resposta = enviar_requisicao(host, f"CONSULTAR|{codigo}")
+                resposta = enviar_requisicao(cliente, f"CONSULTAR|{codigo}")
                 print(resposta)
                 if resposta.startswith("OK"):
                     partes = resposta.split('|')
@@ -131,7 +117,7 @@ def main():
         elif opcao == '3':  # Remover produto
             try:
                 codigo = int(input("Código: "))
-                resposta = enviar_requisicao(host, f"REMOVER|{codigo}")
+                resposta = enviar_requisicao(cliente, f"REMOVER|{codigo}")
                 print(resposta)
                 if resposta.startswith("OK"):
                     lista_produtos.remover(codigo)
@@ -143,6 +129,43 @@ def main():
             break
         else:
             print("Opção inválida!")  # Se o usuário digitou algo errado
+
+# Função para receber dados do servidor em uma thread separada
+def receive_data(cliente):
+    while True:
+        try:
+            resposta = cliente.recv(1024).decode()
+            if resposta:
+                print(f"Resposta do servidor: {resposta}")
+        except socket.error as e:
+            logging.error(f"Erro ao receber dados: {e}")
+            break
+
+# Função principal do cliente
+def main():
+    # Verifica se foi passado um IP como argumento na linha de comando
+    if len(sys.argv) > 1:
+        host = sys.argv[1]
+        if not testar_conexao(host):
+            print(f"Não foi possível conectar ao IP fornecido: {host}")
+            return
+        print(f"Conectado com sucesso ao IP: {host}")
+    else:
+        # Se não passou um IP, tenta conectar no padrão ou pede ao usuário
+        host = "0.0.0.0" if testar_conexao("0.0.0.0") else input("Digite o IP do servidor: ")
+
+    lista_produtos = ListaEncadeada()  # Cria uma lista para guardar os produtos localmente
+    
+    # Cria o socket do cliente
+    cliente = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+    # Cria uma thread para receber dados do servidor
+    receive_thread = threading.Thread(target=receive_data, args=(cliente,))
+    receive_thread.daemon = True  # Torna a thread daemon para que ela seja encerrada quando o programa principal terminar
+    receive_thread.start()  # Inicia a thread de recebimento de dados
+    
+    # Chama a função para enviar requisições
+    send_request(cliente, lista_produtos)
 
 # Executa a função main se o script for rodado diretamente
 if __name__ == "__main__":
