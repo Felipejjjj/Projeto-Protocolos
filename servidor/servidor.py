@@ -36,11 +36,6 @@ class Server:
             data = client.recv(1024)  # Recebe até 1024 bytes de dados do cliente
             data = data.decode().strip()  # Decodifica e remove espaços extras
             
-            if not data:
-                logging.warning("Recebida uma requisição vazia.")
-                client.send("ERRO|Requisição vazia".encode())
-                return
-            
             response = self.process_request(data)  # Processa a requisição recebida
             client.send(response.encode())  # Envia a resposta de volta para o cliente
 
