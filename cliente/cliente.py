@@ -67,16 +67,23 @@ def testar_conexao(host, port=8080):
 
 # Envia uma requisição para o servidor e recebe a resposta
 def enviar_requisicao(host, mensagem):
-    PORT = 8080  # Porta do servidor
+    PORT = 8080
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as cliente:
-            cliente.connect((host, PORT))  # Conecta ao servidor
-            cliente.send(mensagem.encode())  # Envia a mensagem codificada
-            resposta = cliente.recv(1024).decode()  # Recebe a resposta do servidor
-            return resposta  # Retorna a resposta
+            cliente.connect((host, PORT))
+            cliente.send(mensagem.encode())
+
+            resposta = ""
+            while True:
+                parte = cliente.recv(1024).decode()
+                if not parte:
+                    break  # Sai do loop quando não há mais dados para receber
+                resposta += parte
+            
+            return resposta.strip()  # Remove espaços extras e retorna a resposta completa
     except socket.error as e:
         logging.error(f"Erro ao enviar requisição: {e}")
-        return "ERRO|Falha na comunicação com o servidor"  # Retorna erro
+        return "ERRO|Falha na comunicação com o servidor"
 
 # Função principal do cliente
 

@@ -41,11 +41,11 @@ class Server:
             logging.info(f"Recebido: {data}")
 
             response_full = self.process_request(data)  # Obtém a resposta completa
-            client.send(response_full.encode())  # Envia a resposta completa para o cliente
+            client.sendall(response_full.encode())  # Garante que toda a resposta seja enviada
 
         except Exception as e:
             logging.error(f"Erro ao processar requisição: {e}")
-            client.send("ERRO|Falha interna do servidor".encode())
+            client.sendall("ERRO|Falha interna do servidor".encode())
         finally:
             client.close()
 
