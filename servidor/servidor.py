@@ -63,50 +63,50 @@ class Server:
         else:
             return "ERRO|Ação desconhecida"  # Responde com erro se o comando for inválido
 
-    # Cadastra um novo produto na BST (árvore binária de busca)
-    def cadastrar(self, partes):
-        if len(partes) < 4:
-            return "ERRO|Dados incompletos"  # Retorna erro se não tiver todos os campos necessários
+def cadastrar(self, partes):
+    if len(partes) < 4:
+        return "ERRO|Dados incompletos"
 
-        try:
-            codigo, nome, preco = int(partes[1]), partes[2], float(partes[3])  # Converte os valores recebidos
-            if not nome.replace(" ", "").isalpha():
-                return "ERRO|Nome inválido. Use apenas letras e espaços"
-            
-            self.produtos.insert(codigo, nome, preco)  # Insere o produto na árvore BST
-            #logging.info(f"Produto cadastrado: {codigo} - {nome} (R$ {preco})")  # Log do cadastro
-            return f"200 OK\n------\nProduto {nome} cadastrado com sucesso!"  # Responde ao cliente com sucesso
-        except ValueError:
-            return "ERRO|Formato inválido dos dados"  # Retorna erro se os dados não forem válidos
+    try:
+        codigo, nome, preco = int(partes[1]), partes[2], float(partes[3])
+        if not nome.replace(" ", "").isalpha():
+            return "ERRO|Nome inválido. Use apenas letras e espaços"
+        
+        self.produtos.insert(codigo, nome, preco)
+        logging.info(f"Produto cadastrado: {codigo} - {nome} (R$ {preco})")
+        
+        # Apenas a primeira linha será enviada ao cliente
+        return "200 OK"
+    
+    except ValueError:
+        return "ERRO|Formato inválido dos dados"
 
-    # Consulta um produto pelo código na BST
-    def consultar(self, partes):
-        if len(partes) < 2:
-            return "ERRO|Código não fornecido"  # Retorna erro se não informar o código
+def consultar(self, partes):
+    if len(partes) < 2:
+        return "ERRO|Código não fornecido"
 
-        try:
-            codigo = int(partes[1])  # Converte o código para inteiro
-            produto = self.produtos.search(codigo)  # Procura o produto na árvore BST
-            if produto:
-                return f"200 OK\n------\ncodigo: {codigo} | nome: {produto['nome']} | valor: R${produto['preco']}"  # Retorna os dados do produto
-            return "404 NOT FOUND\n-------------\nProduto não encontrado"  # Retorna erro se não encontrar
-        except ValueError:
-            return "ERRO|Código inválido"  # Retorna erro se o código não for um número
+    try:
+        codigo = int(partes[1])
+        produto = self.produtos.search(codigo)
+        if produto:
+            return "200 OK"
+        return "404 NOT FOUND"
+    except ValueError:
+        return "ERRO|Código inválido"
 
-    # Remove um produto da BST pelo código
-    def remover(self, partes):
-        if len(partes) < 2:
-            return "ERRO|Código não fornecido"  # Retorna erro se não informar o código
+def remover(self, partes):
+    if len(partes) < 2:
+        return "ERRO|Código não fornecido"
 
-        try:
-            codigo = int(partes[1])  # Converte o código para inteiro
-            sucesso = self.produtos.remove(codigo)  # Tenta remover o produto da árvore BST
-            if sucesso:
-                #logging.info(f"Produto {codigo} removido")  # Log da remoção
-                return "200 OK\n------\nProduto removido com sucesso"  # Retorna sucesso
-            return "404 NOT FOUND\n-------------\nProduto não encontrado"  # Retorna erro se o produto não existir
-        except ValueError:
-            return "ERRO|Código inválido"  # Retorna erro se o código não for um número
+    try:
+        codigo = int(partes[1])
+        sucesso = self.produtos.remove(codigo)
+        if sucesso:
+            logging.info(f"Produto {codigo} removido")
+            return "200 OK"
+        return "404 NOT FOUND"
+    except ValueError:
+        return "ERRO|Código inválido"
 
 # Inicia o servidor quando o script for executado diretamente
 if __name__ == "__main__":
