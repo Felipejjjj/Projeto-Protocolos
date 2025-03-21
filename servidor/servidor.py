@@ -36,17 +36,22 @@ class Server:
     # Processa a requisição recebida do cliente
     def handle_client(self, client):
         try:
-            data = client.recv(1024)  # Recebe até 1024 bytes de dados do cliente
-            data = data.decode().strip()  # Decodifica e remove espaços extras
+            data = client.recv(1024).decode().strip()
+            response_full = self.process_request(data)  # Obtém a resposta completa
+            response_lines = response_full.split("\n", 1)  # Divide entre a primeira linha e o restante
+
+            status_code = response_lines[0]  # A primeira linha contém apenas "200 OK" ou "404 NOT FOUND"
+            client.send(status_code.encode())  # Envia apenas o status para capturas como Wireshark
             
-            response = self.process_request(data)  # Processa a requisição recebida
-            client.send(response.encode())  # Envia a resposta de volta para o cliente
+            if len(response_lines) > 1:
+                full_message = "\n" + response_lines[1]  # Garante que o restante da mensagem seja enviado
+                client.send(full_message.encode())  # Envia a mensagem completa
 
         except Exception as e:
-            logging.error(f"Erro ao processar requisição: {e}")  # Log de erro
+            logging.error(f"Erro ao processar requisição: {e}")
             client.send("ERRO|Falha interna do servidor".encode())
         finally:
-            client.close()  # Fecha a conexão com o cliente
+            client.close()
 
     # Interpreta a requisição do cliente e direciona para a ação correta
     def process_request(self, request):
