@@ -1,124 +1,129 @@
-import socket
-import logging
-import threading  # Importa o módulo threading
-from bst import BST  # Importa a árvore binária de busca (BST) para armazenar os produtos
+import socket  # Para criar a comunicação de rede (clientes e servidor)
+import logging  # Para registrar mensagens de log, como erros e informações
+import threading  # Para permitir que o servidor atenda múltiplos clientes ao mesmo tempo
+from bst import BST  # Importa a classe BST (Árvore Binária de Busca), usada para armazenar os produtos de forma eficiente
 
-# Classe que representa o servidor
 class Server:
     def __init__(self, host="0.0.0.0", port=8080):
-        self.host = host  # IP no qual o servidor vai rodar (0.0.0.0 aceita conexões de qualquer IP)
-        self.port = port  # Porta onde o servidor escuta as conexões
-        self.produtos = BST()  # Estrutura para armazenar os produtos na forma de uma árvore binária
-        self.setup_logging()  # Configuração do sistema de logs
+        # Inicializa o servidor com o endereço IP e porta definidos
+        self.host = host  # O servidor aceitará conexões de qualquer IP
+        self.port = port  # Porta que o servidor vai escutar
+        self.produtos = BST()  # Usando a BST para armazenar os produtos cadastrados
+        self.lock = threading.Semaphore(1)  # Semáforo para garantir que apenas uma thread por vez modifique a lista de produtos
+        self.setup_logging()  # Configura o sistema de logs
 
-    # Configura os logs para registrar eventos do servidor
     def setup_logging(self):
+        # Configura como as mensagens de log serão exibidas
         logging.basicConfig(
-            level=logging.INFO,  # Define o nível de log como INFO
-            format="%(asctime)s - %(levelname)s - %(message)s",  # Formato da mensagem de log
-            datefmt="%Y-%m-%d %H:%M:%S",  # Formato da data e hora
+            level=logging.INFO,  # Nível de log (informações gerais)
+            format="%(asctime)s - %(levelname)s - %(message)s",  # Formato do log com data e hora
+            datefmt="%Y-%m-%d %H:%M:%S",  # Formato de data e hora
         )
 
-    # Inicia o servidor e começa a escutar conexões
     def start(self):
-        server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # Cria um socket TCP
-        server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  # Evita erro de "endereço já em uso"
-        server.bind((self.host, self.port))  # Associa o socket ao IP e porta
-        server.listen(5)  # Define um limite de 5 conexões simultâneas na fila
-        logging.info(f"Servidor iniciado na porta {self.port}...")  # Log de início do servidor
+        # Cria o socket do servidor e começa a escutar por conexões
+        server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # Define o tipo de comunicação (TCP)
+        server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  # Permite reutilizar o endereço
+        server.bind((self.host, self.port))  # Faz o bind do servidor ao IP e à porta
+        server.listen(5)  # Permite até 5 conexões simultâneas
+        logging.info(f"Servidor iniciado na porta {self.port}...")  # Log da inicialização do servidor
 
         while True:
-            client, addr = server.accept()  # Aceita uma nova conexão
-            logging.info(f"Nova conexão de {addr}")  # Log da conexão recebida
-            # Cria uma nova thread para processar a requisição do cliente
-            client_thread = threading.Thread(target=self.handle_client, args=(client,))
-            client_thread.start()  # Inicia a thread
+            # Espera por novos clientes
+            client, addr = server.accept()  # Quando um cliente se conecta, aceita a conexão
+            logging.info(f"Nova conexão de {addr}")  # Log da nova conexão
+            client_thread = threading.Thread(target=self.handle_client, args=(client,))  # Cria uma nova thread para lidar com o cliente
+            client_thread.start()  # Inicia a thread que vai atender o cliente
 
-    # Processa a requisição recebida do cliente
     def handle_client(self, client):
+        # Função que lida com as requisições de um cliente
         try:
-            data = client.recv(1024).decode().strip()
-            logging.info(f"Recebido: {data}")
+            data = client.recv(1024).decode().strip()  # Recebe dados do cliente e decodifica
+            logging.info(f"Recebido: {data}")  # Log da requisição recebida
 
-            response_full = self.process_request(data)  # Obtém a resposta completa
-            client.sendall(response_full.encode())  # Garante que toda a resposta seja enviada
+            response_full = self.process_request(data)  # Processa a requisição e gera a resposta
+            client.sendall(response_full.encode())  # Envia a resposta de volta ao cliente
 
         except Exception as e:
+            # Se houver algum erro no processamento, envia uma mensagem de erro
             logging.error(f"Erro ao processar requisição: {e}")
-            client.sendall("ERRO|Falha interna do servidor".encode())
+            client.sendall("ERRO|Falha interna do servidor".encode())  # Envia erro ao cliente
+
         finally:
-            client.close()
+            client.close()  # Fecha a conexão com o cliente, independentemente de ter dado certo ou não
 
-    # Interpreta a requisição do cliente e direciona para a ação correta
     def process_request(self, request):
-        partes = request.split("|")  # Divide a mensagem recebida pelo delimitador "|"
-        acao = partes[0]  # A primeira parte indica a ação desejada
+        # Função que processa a requisição e chama a ação apropriada
+        partes = request.split("|")  # Divide a requisição em partes usando "|" como separador
+        acao = partes[0]  # A primeira parte da requisição indica a ação
 
-        # Executa a ação com base no comando recebido
         if acao == "CADASTRAR":
-            return self.cadastrar(partes)
+            return self.cadastrar(partes)  # Chama a função de cadastro
         elif acao == "CONSULTAR":
-            return self.consultar(partes)
+            return self.consultar(partes)  # Chama a função de consulta
         elif acao == "REMOVER":
-            return self.remover(partes)
+            return self.remover(partes)  # Chama a função de remoção
         else:
-            return "ERRO|Ação desconhecida"  # Responde com erro se o comando for inválido
+            return "ERRO|Ação desconhecida"  # Retorna erro caso a ação seja inválida
 
-    # Cadastra um novo produto na BST
     def cadastrar(self, partes):
-        if len(partes) < 4:
-            return "ERRO|Dados incompletos"
+        # Função para cadastrar um novo produto
+        if len(partes) < 4:  # Verifica se a quantidade de dados é suficiente
+            return "ERRO|Dados incompletos"  # Retorna erro se faltar dados
 
         try:
-            codigo, nome, preco = int(partes[1]), partes[2], float(partes[3])
-            if not nome.replace(" ", "").isalpha():
+            codigo, nome, preco = int(partes[1]), partes[2], float(partes[3])  # Tenta extrair os dados (código, nome e preço)
+            if not nome.replace(" ", "").isalpha():  # Verifica se o nome contém apenas letras e espaços
                 return "ERRO|Nome inválido. Use apenas letras e espaços"
 
-            if self.produtos is None:
-                return "ERRO|Estrutura de dados não inicializada"
+            with self.lock:  # Garante que apenas uma thread acesse a lista de produtos por vez
+                self.produtos.insert(codigo, nome, preco)  # Insere o novo produto na árvore
 
-            self.produtos.insert(codigo, nome, preco)
-            logging.info(f"Produto cadastrado: {codigo} - {nome} (R$ {preco})")
-
-            return "200 OK\n------\nProduto cadastrado com sucesso!"
+            logging.info(f"Produto cadastrado: {codigo} - {nome} (R$ {preco})")  # Log do produto cadastrado
+            return "200 OK\n------\nProduto cadastrado com sucesso!"  # Resposta de sucesso
 
         except ValueError:
-            return "ERRO|Formato inválido dos dados"
+            return "ERRO|Formato inválido dos dados"  # Caso os dados não tenham o formato correto
 
-    # Consulta um produto pelo código na BST
     def consultar(self, partes):
-        if len(partes) < 2:
-            return "ERRO|Código não fornecido"
+        # Função para consultar um produto pelo código
+        if len(partes) < 2:  # Verifica se o código foi fornecido
+            return "ERRO|Código não fornecido"  # Retorna erro se o código não for fornecido
 
         try:
-            codigo = int(partes[1])
-            produto = self.produtos.search(codigo)
+            codigo = int(partes[1])  # Tenta converter o código para inteiro
+
+            with self.lock:  # Garante que a consulta ao banco de dados seja feita de forma segura
+                produto = self.produtos.search(codigo)  # Tenta buscar o produto pelo código
 
             if produto:
+                # Se o produto for encontrado, retorna as informações
                 return f"200 OK\n------\ncodigo: {codigo} | nome: {produto['nome']} | valor: R${produto['preco']}"
-            return "404 NOT FOUND\n------\nProduto não encontrado"
+            return "404 NOT FOUND\n------\nProduto não encontrado"  # Se o produto não for encontrado, retorna erro
 
         except ValueError:
-            return "ERRO|Código inválido"
+            return "ERRO|Código inválido"  # Caso o código não seja um número válido
 
-    # Remove um produto da BST pelo código
     def remover(self, partes):
-        if len(partes) < 2:
-            return "ERRO|Código não fornecido"
+        # Função para remover um produto pelo código
+        if len(partes) < 2:  # Verifica se o código foi fornecido
+            return "ERRO|Código não fornecido"  # Retorna erro se o código não for fornecido
 
         try:
-            codigo = int(partes[1])
-            sucesso = self.produtos.remove(codigo)
+            codigo = int(partes[1])  # Tenta converter o código para inteiro
+
+            with self.lock:  # Garante que a remoção seja feita de forma segura
+                sucesso = self.produtos.remove(codigo)  # Tenta remover o produto pelo código
 
             if sucesso:
-                logging.info(f"Produto {codigo} removido")
-                return "200 OK\n------\nProduto removido com sucesso"
-            return "404 NOT FOUND\n------\nProduto não encontrado"
+                logging.info(f"Produto {codigo} removido")  # Log da remoção
+                return "200 OK\n------\nProduto removido com sucesso"  # Retorna sucesso
+            return "404 NOT FOUND\n------\nProduto não encontrado"  # Retorna erro caso o produto não seja encontrado
 
         except ValueError:
-            return "ERRO|Código inválido"
+            return "ERRO|Código inválido"  # Caso o código não seja um número válido
 
-# Inicia o servidor quando o script for executado diretamente
 if __name__ == "__main__":
+    # Esse bloco inicia o servidor se o script for executado diretamente
     server = Server()  # Cria uma instância do servidor
-    server.start()  # Inicia o servidor
+    server.start()  # Inicia o servidor, fazendo-o começar a escutar por conexões
