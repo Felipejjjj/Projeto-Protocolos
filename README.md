@@ -5,6 +5,14 @@ Arquivos do Projeto
 
     servidor.py: Contém o código do servidor do sistema de gerenciamento de produtos. O servidor agora utiliza threading, permitindo que ele crie uma nova thread para cada cliente que se conecta. Cada thread é responsável por processar a requisição de um cliente, permitindo que o servidor atenda múltiplos clientes simultaneamente sem bloqueios. Além disso, o servidor registra logs das operações realizadas.
 
+    O servidor também implementa o uso de um semaforo para sincronizar o acesso à estrutura de dados compartilhada, a árvore binária de busca (BST). Esse semáforo permite que somente uma thread de cada vez tenha acesso à árvore de produtos, evitando conflitos ao realizar operações como inserção, remoção ou consulta de produtos.
+    
+    Como o Semáforo Funciona:
+    
+    O semáforo é implementado com o comando self.lock = threading.Semaphore(1), onde o valor 1 garante que apenas uma thread tenha acesso ao recurso compartilhado (a árvore binária de busca) por vez.
+    As operações que alteram ou consultam a árvore de produtos (como cadastrar, consultar e remover) são protegidas pelo semáforo, usando a instrução with self.lock:.
+    Isso impede que múltiplas threads acessem a árvore ao mesmo tempo e causem condições de corrida, onde duas ou mais threads tentam modificar os dados simultaneamente.
+
     cliente.py: Contém o código do cliente que se conecta ao servidor. O cliente pode enviar comandos para cadastrar produtos, consultar produtos, remover produtos e encerrar a conexão.
 
     bst.py: Implementa a estrutura de árvore binária de busca (BST) para armazenar e gerenciar os produtos no servidor. Fornece funções para inserção, busca e remoção de produtos.
