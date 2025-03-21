@@ -22,6 +22,7 @@ class Server:
     # Inicia o servidor e começa a escutar conexões
     def start(self):
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # Cria um socket TCP
+        server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  # Evita erro de "endereço já em uso"
         server.bind((self.host, self.port))  # Associa o socket ao IP e porta
         server.listen(5)  # Define um limite de 5 conexões simultâneas na fila
         logging.info(f"Servidor iniciado na porta {self.port}...")  # Log de início do servidor
@@ -37,15 +38,10 @@ class Server:
     def handle_client(self, client):
         try:
             data = client.recv(1024).decode().strip()
-            response_full = self.process_request(data)  # Obtém a resposta completa
-            response_lines = response_full.split("\n", 1)  # Divide entre a primeira linha e o restante
+            logging.info(f"Recebido: {data}")
 
-            status_code = response_lines[0]  # A primeira linha contém apenas "200 OK" ou "404 NOT FOUND"
-            client.send(status_code.encode())  # Envia apenas o status para capturas como Wireshark
-            
-            if len(response_lines) > 1:
-                full_message = "\n" + response_lines[1]  # Garante que o restante da mensagem seja enviado
-                client.send(full_message.encode())  # Envia a mensagem completa
+            response_full = self.process_request(data)  # Obtém a resposta completa
+            client.send(response_full.encode())  # Envia a resposta completa para o cliente
 
         except Exception as e:
             logging.error(f"Erro ao processar requisição: {e}")
@@ -68,50 +64,59 @@ class Server:
         else:
             return "ERRO|Ação desconhecida"  # Responde com erro se o comando for inválido
 
-def cadastrar(self, partes):
-    if len(partes) < 4:
-        return "ERRO|Dados incompletos"
+    # Cadastra um novo produto na BST
+    def cadastrar(self, partes):
+        if len(partes) < 4:
+            return "ERRO|Dados incompletos"
 
-    try:
-        codigo, nome, preco = int(partes[1]), partes[2], float(partes[3])
-        if not nome.replace(" ", "").isalpha():
-            return "ERRO|Nome inválido. Use apenas letras e espaços"
-        
-        self.produtos.insert(codigo, nome, preco)
-        logging.info(f"Produto cadastrado: {codigo} - {nome} (R$ {preco})")
-        
-        # Apenas a primeira linha será enviada ao cliente
-        return "200 OK"
-    
-    except ValueError:
-        return "ERRO|Formato inválido dos dados"
+        try:
+            codigo, nome, preco = int(partes[1]), partes[2], float(partes[3])
+            if not nome.replace(" ", "").isalpha():
+                return "ERRO|Nome inválido. Use apenas letras e espaços"
 
-def consultar(self, partes):
-    if len(partes) < 2:
-        return "ERRO|Código não fornecido"
+            if self.produtos is None:
+                return "ERRO|Estrutura de dados não inicializada"
 
-    try:
-        codigo = int(partes[1])
-        produto = self.produtos.search(codigo)
-        if produto:
-            return "200 OK"
-        return "404 NOT FOUND"
-    except ValueError:
-        return "ERRO|Código inválido"
+            self.produtos.insert(codigo, nome, preco)
+            logging.info(f"Produto cadastrado: {codigo} - {nome} (R$ {preco})")
 
-def remover(self, partes):
-    if len(partes) < 2:
-        return "ERRO|Código não fornecido"
+            return "200 OK\n------\nProduto cadastrado com sucesso!"
 
-    try:
-        codigo = int(partes[1])
-        sucesso = self.produtos.remove(codigo)
-        if sucesso:
-            logging.info(f"Produto {codigo} removido")
-            return "200 OK"
-        return "404 NOT FOUND"
-    except ValueError:
-        return "ERRO|Código inválido"
+        except ValueError:
+            return "ERRO|Formato inválido dos dados"
+
+    # Consulta um produto pelo código na BST
+    def consultar(self, partes):
+        if len(partes) < 2:
+            return "ERRO|Código não fornecido"
+
+        try:
+            codigo = int(partes[1])
+            produto = self.produtos.search(codigo)
+
+            if produto:
+                return f"200 OK\n------\ncodigo: {codigo} | nome: {produto['nome']} | valor: R${produto['preco']}"
+            return "404 NOT FOUND\n------\nProduto não encontrado"
+
+        except ValueError:
+            return "ERRO|Código inválido"
+
+    # Remove um produto da BST pelo código
+    def remover(self, partes):
+        if len(partes) < 2:
+            return "ERRO|Código não fornecido"
+
+        try:
+            codigo = int(partes[1])
+            sucesso = self.produtos.remove(codigo)
+
+            if sucesso:
+                logging.info(f"Produto {codigo} removido")
+                return "200 OK\n------\nProduto removido com sucesso"
+            return "404 NOT FOUND\n------\nProduto não encontrado"
+
+        except ValueError:
+            return "ERRO|Código inválido"
 
 # Inicia o servidor quando o script for executado diretamente
 if __name__ == "__main__":
