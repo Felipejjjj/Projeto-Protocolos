@@ -5,7 +5,7 @@ from bst import BST  # Importa a árvore binária de busca (BST) para armazenar 
 
 # Classe que representa o servidor
 class Server:
-    def __init__(self, host="0.0.0.0", port=5000):
+    def __init__(self, host="0.0.0.0", port=8080):
         self.host = host  # IP no qual o servidor vai rodar (0.0.0.0 aceita conexões de qualquer IP)
         self.port = port  # Porta onde o servidor escuta as conexões
         self.produtos = BST()  # Estrutura para armazenar os produtos na forma de uma árvore binária
@@ -74,7 +74,7 @@ class Server:
                 return "ERRO|Nome inválido. Use apenas letras e espaços"
             
             self.produtos.insert(codigo, nome, preco)  # Insere o produto na árvore BST
-            logging.info(f"Produto cadastrado: {codigo} - {nome} (R$ {preco})")  # Log do cadastro
+            #logging.info(f"Produto cadastrado: {codigo} - {nome} (R$ {preco})")  # Log do cadastro
             return f"200 OK\n------\nProduto {nome} cadastrado com sucesso!"  # Responde ao cliente com sucesso
         except ValueError:
             return "ERRO|Formato inválido dos dados"  # Retorna erro se os dados não forem válidos
@@ -102,7 +102,7 @@ class Server:
             codigo = int(partes[1])  # Converte o código para inteiro
             sucesso = self.produtos.remove(codigo)  # Tenta remover o produto da árvore BST
             if sucesso:
-                logging.info(f"Produto {codigo} removido")  # Log da remoção
+                #logging.info(f"Produto {codigo} removido")  # Log da remoção
                 return "200 OK\n------\nProduto removido com sucesso"  # Retorna sucesso
             return "404 NOT FOUND\n-------------\nProduto não encontrado"  # Retorna erro se o produto não existir
         except ValueError:
